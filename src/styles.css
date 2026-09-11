@@ -529,6 +529,19 @@ a {
   pointer-events: none;
 }
 
+/* ---------- Mega menu: responsive Insights items ---------- */
+@media screen and (max-width: 991px) {
+  .mega-menu-insights-item:last-child {
+    display: none;
+  }
+}
+
+@media screen and (max-width: 767px) {
+  .mega-menu-insights-item:nth-child(3) {
+    display: none;
+  }
+}
+
 /* ---------- Hero panels panorama (Home hero, from G | Embed Code) ---------- */
 .hero-panels-panel-left .hero-panels-layer-panorama {
   left: 0;
