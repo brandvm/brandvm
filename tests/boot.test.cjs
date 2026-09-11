@@ -3,6 +3,7 @@ const test = require('node:test');
 const vm = require('node:vm');
 const { buildSync } = require('esbuild');
 const path = require('node:path');
+const { readFileSync } = require('node:fs');
 const code = buildSync({ entryPoints: [path.resolve(__dirname, '../src/index.ts')], bundle: true, write: false, format: 'iife', define: { __BV_VERSION__: '"test-release"' } }).outputFiles[0].text;
 
 function setup(ready) {
@@ -45,4 +46,13 @@ test('bundle can arrive after Webflow readiness without reinitializing on duplic
   const count = h.events.length;
   vm.runInContext(code, h.context);
   assert.equal(h.events.length, count);
+});
+
+test('production bundle and manifest expose the package release version', () => {
+  const h = setup(true);
+  const read = file => readFileSync(path.resolve(__dirname, '..', file), 'utf8');
+  const { version } = JSON.parse(read('package.json'));
+  vm.runInContext(read('dist/index.js'), h.context);
+  assert.equal(h.root.dataset.bvVersion, version);
+  assert.deepEqual(JSON.parse(read('dist/version.json')), { version });
 });

@@ -11,12 +11,13 @@ assert.equal(config.production.css, `https://cdn.jsdelivr.net/gh/brandvm/brandvm
 
 const loader = await readFile('webflow/assets-loader.js', 'utf8');
 let code;
-if (version === baseline.runtimeVersion) {
+if (version === baseline.migrationVersion) {
   // A different URL changes esbuild's character-frequency-based identifier
-  // names. Keep the first migration's published diff strictly URL-only.
+  // names. Keep the migration diff limited to URLs and version metadata.
   const published = await readFile(baseline.publishedBootstrap.file, 'utf8');
   const [owner, repository] = baseline.sourceRepository.split('/');
   code = published
+    .replace(`production:{version:${JSON.stringify(baseline.runtimeVersion)}`, `production:{version:${JSON.stringify(version)}`)
     .replaceAll(baseline.assets['dist/index.js'].sourceUrl, config.production.js)
     .replaceAll(baseline.assets['dist/styles.css'].sourceUrl, config.production.css)
     .replaceAll(`https://${owner}.github.io/${repository}/`, config.stagingBase);
@@ -45,7 +46,7 @@ locations. Keep all existing tracking, metadata, schema, component markup,
 breakpoint CSS, and page-specific code. No Webflow change is part of repo setup.
 
 The loader, initialization timing, CSS order and Designer cleanup match the
-currently published v1.1.0 setup. Only repository delivery addresses change.
+original source setup. Only repository delivery addresses and version metadata change.
 Verify the pinned release URLs before any future source switch.
 -->
 

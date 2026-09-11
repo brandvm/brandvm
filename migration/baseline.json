@@ -3,6 +3,7 @@
   "sourceCommit": "cd6162d28b82e434c44a0a6bf62fea4d50ef4bf3",
   "sourceReleaseCommit": "3b96e5f117b57d387a908cecaa7dff25f9015d7d",
   "runtimeVersion": "1.1.0",
+  "migrationVersion": "1.0.0",
   "assets": {
     "dist/index.js": {
       "sourceUrl": "https://cdn.jsdelivr.net/gh/hamounbv/brandvm@1.1.0/dist/index.js",

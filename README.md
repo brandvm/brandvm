@@ -2,7 +2,7 @@
 
 The organization repository for the shared CSS and JavaScript used by [brandvm.com](https://www.brandvm.com).
 
-This migration replaces the starter template with the existing site's actual code. The initial **v1.1.0** build must reproduce the currently served CSS and JavaScript byte for byte. Moving the source must not redesign the site or change when its features initialize.
+This migration replaces the starter template with the existing site's actual code. The initial **v1.0.0** organization release preserves the currently served CSS and JavaScript, with only release metadata renumbered from the original repository’s v1.1.0. Moving the source must not redesign the site or change when its features initialize.
 
 **Repository setup does not update or publish Webflow.** The site remains on its existing source until a separate, verified source switch.
 
@@ -22,7 +22,7 @@ pnpm check             # strict TypeScript
 pnpm build             # production dist/; remove stale dev outputs
 pnpm snippets          # generate asset-only integration snippets
 pnpm test              # runtime, loader and Designer compatibility
-pnpm verify:migration  # v1.1.0 sources and build match the original release
+pnpm verify:migration  # v1.0.0 matches the source, allowing only version metadata
 pnpm validate          # run all the above checks in order
 ```
 
@@ -53,9 +53,9 @@ The source is `hamounbv/brandvm` at commit `cd6162d28b82e434c44a0a6bf62fea4d50ef
 
 The template's generic CSS, 1440px sizing defaults, resets, pre-paint scroll lock, body stylesheet switching, and alternate footer loader are not used. Those would change the existing site. The actual stylesheet retains its 1680px scale, tokens, selectors, media queries and rule order. The runtime entry point, feature implementations, public APIs, dependency handling and Webflow-ready callback remain unchanged.
 
-The initial build is **content-identical to the current v1.1.0 release**, rather than an attempted fix for its outstanding loading issues. Homepage animation changes and the proposed Contact-only eager HubSpot form are separate work. Page and component code remains in Webflow.
+The initial org build is **v1.0.0**, with the same feature code and CSS as the original repository’s v1.1.0. Only the runtime version marker and version manifest differ; this release does not fix the outstanding loading issues. Homepage animation changes and the proposed Contact-only eager HubSpot form are separate work. Page and component code remains in Webflow.
 
-Migration verification checks the source files, the unchanged loader, and all three production artifacts. These fingerprints remain an archived baseline after migration. Intentional behavior changes must use a new runtime version and appropriate feature tests; do not overwrite the baseline or reuse the v1.1.0 tag.
+Migration verification checks the source files, the unchanged loader, and all three production artifacts. It normalizes only the runtime version assignment and version manifest before comparing against the original fingerprints; CSS must match exactly. The original `runtimeVersion` and hashes remain archived, while `migrationVersion` identifies the org’s v1.0.0 release. Intentional behavior changes must use a new runtime version and appropriate feature tests; do not overwrite the baseline or reuse the v1.0.0 tag.
 
 ## Delivery and CI
 
@@ -63,7 +63,7 @@ Pull requests run validation. A validated push to `master` publishes the built a
 
 | Environment after a future source switch | Assets |
 | --- | --- |
-| Production | `https://cdn.jsdelivr.net/gh/brandvm/brandvm@1.1.0/dist/` |
+| Production | `https://cdn.jsdelivr.net/gh/brandvm/brandvm@1.0.0/dist/` |
 | Webflow staging | `https://brandvm.github.io/brandvm/` |
 | Local development on Webflow staging | `http://localhost:3000/` |
 
@@ -74,17 +74,19 @@ Production artifacts stay committed. CI rebuilds them and rejects drift. Release
 See [loader.html](loader.html) and [migration/README.md](migration/README.md). Preserve the current loader and placement. The required delivery substitutions are:
 
 ```text
-hamounbv/brandvm@1.1.0  -> brandvm/brandvm@1.1.0
+hamounbv/brandvm@1.1.0  -> brandvm/brandvm@1.0.0
 https://hamounbv.github.io/brandvm/ -> https://brandvm.github.io/brandvm/
 ```
 
-Replace only the existing custom asset portions of the head and shared Embed. The generated snippets deliberately omit site tracking, metadata, schema, menu breakpoint styles and page-specific code, so they cannot be mistaken for full replacements of those blocks. The existing footer needs no extra script tag.
+The generated head also changes its production version metadata from 1.1.0 to 1.0.0. Replace only the existing custom asset portions of the head and shared Embed. The generated snippets deliberately omit site tracking, metadata, schema, menu breakpoint styles and page-specific code, so they cannot be mistaken for full replacements of those blocks. The existing footer needs no extra script tag.
 
 The shared Embed retains a real stylesheet link so CSS is visible in Designer. Published-page cleanup follows the current implementation: when `#bv-site-css` exists in the head, it removes the duplicate Designer link. This preserves the current published cascade and does not introduce another CSS-placement change.
 
-Before a source switch, verify both pinned CDN assets and test Home, Contact, Our Work, Insights, a service page and a case study on staging at desktop and mobile widths. Compare cold and cached loads. Identical code preserves behavior but does not guarantee identical CDN connection/cache timing, or fix pre-existing page-load delays. Publish changes to Webflow only as a separate authorized step.
+Before a source switch, verify both pinned CDN assets and test Home, Contact, Our Work, Insights, a service page and a case study on staging at desktop and mobile widths. Compare cold and cached loads. Preserved feature code does not guarantee identical CDN connection/cache timing, or fix pre-existing page-load delays. Publish changes to Webflow only as a separate authorized step.
 
 ## Later releases
+
+The initial org v1.1.0 release/tag is withdrawn so GitHub v1.1.0 can be used later. Its old jsDelivr addresses were already requested and are permanently cached. For that future release, use a new commit-pinned CDN address and update snippet URL validation accordingly; do not reuse `brandvm/brandvm@1.1.0/dist/*` or assume deleting the tag clears it. See [the migration record](migration/README.md#release-number-correction).
 
 1. Make and test an intentional change on a branch; bump `package.json` version and the three production version/URL fields in `webflow/deployment.json` together.
 2. Run `pnpm validate`; commit source, build, configuration and generated snippets.

@@ -1,8 +1,8 @@
 {
   "production": {
-    "version": "1.1.0",
-    "js": "https://cdn.jsdelivr.net/gh/brandvm/brandvm@1.1.0/dist/index.js",
-    "css": "https://cdn.jsdelivr.net/gh/brandvm/brandvm@1.1.0/dist/styles.css"
+    "version": "1.0.0",
+    "js": "https://cdn.jsdelivr.net/gh/brandvm/brandvm@1.0.0/dist/index.js",
+    "css": "https://cdn.jsdelivr.net/gh/brandvm/brandvm@1.0.0/dist/styles.css"
   },
   "stagingBase": "https://brandvm.github.io/brandvm/",
   "devBase": "http://localhost:3000/"
