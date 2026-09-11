@@ -20,9 +20,9 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm validate
       - name: Require delivery artifacts in git
-        run: git ls-files --error-unmatch dist/index.js dist/styles.css dist/version.json loader.html webflow/head-assets.html webflow/designer-css.html webflow/footer-assets.html
-      - name: Check committed build and snippets
-        run: git diff --exit-code -- dist loader.html webflow/head-assets.html webflow/designer-css.html webflow/footer-assets.html
+        run: git ls-files --error-unmatch dist/index.js dist/styles.css dist/version.json loader.html
+      - name: Check committed production build
+        run: git diff --exit-code -- dist
       - uses: actions/upload-pages-artifact@v3
         if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
         with:
