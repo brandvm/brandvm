@@ -1,26 +1,11 @@
-<!-- Brand Vision custom-code integration — edit this file directly.
-Three pieces, pasted into three different places in Webflow.
-Do not paste this entire file into a single field.
+<!-- Brand Vision custom code — edit and copy from this file.
+Four sections, pasted into the four places marked below.
+Keep existing tracking, metadata and other site/page code.
 
-1. HEAD: connection hints only. Keep existing tracking, metadata and styles.
-2. EMBED: one shared CSS/config Embed near the top of every page.
-3. FOOTER: starts the custom JavaScript download before </body>.
-
-Production uses pinned v1.1.0 assets. For a new release, update package.json,
-the stylesheet href, and both production configurations below together.
-Never move an existing release tag. pnpm validate checks these versions.
-
-Development: pnpm dev, then ?bv-dev=1 on *.webflow.io or on the actual
-*.canvas.webflow.com preview frame. ?bv-dev=0 exits. The choice persists
-per browser origin. Production ignores the flag.
-
-Designer has a real released stylesheet. See README.md for a browser-only
-local CSS override; do not publish an always-active localhost link.
-
-Apply all three pieces together on staging before production. Remove the
-previous bv-site-css head link and loadBrandVisionAssets head bootstrap;
-replace the previous Designer link/cleanup and add the new footer loader.
-Preserve other site/page code. No Webflow publication is automated.
+Designer uses the two real CSS links in Embed 1; it does not run Embed 2.
+Published staging uses GitHub Pages, or localhost with ?bv-dev=1.
+?bv-dev=0 exits local mode. Production uses pinned v1.1.0 assets.
+For a new release, update both VER values and package.json together.
 -->
 
 <!-- START HEAD -->
@@ -28,129 +13,66 @@ Preserve other site/page code. No Webflow publication is automated.
 <link rel="preconnect" href="https://cdn.jsdelivr.net" />
 <!-- END HEAD -->
 
-<!-- START EMBED -->
-<!-- Shared on-canvas Embed: CSS + environment selection, once on every page. -->
-<link id="bv-css" data-bv-css rel="stylesheet" href="https://cdn.jsdelivr.net/gh/brandvm/brandvm@1.1.0/dist/styles.css" />
+<!-- START EMBED_CSS -->
+<!-- Designer Embed 1: CSS only, shared near the top of every page. -->
+<link id="bv-css" rel="stylesheet" href="https://brandvm.github.io/brandvm/styles.css?v=1" />
+<link id="bv-css-dev" rel="stylesheet" href="http://localhost:3000/styles.css" />
+<!-- END EMBED_CSS -->
+
+<!-- START EMBED_CONFIG -->
+<!-- Designer Embed 2: place immediately after Embed 1. Runs on published pages. -->
 <script>
-// Shared Embed: select CSS early, but leave every JavaScript request to the footer.
-function prepareBrandVisionStyles(config) {
-  if (window.__bvAssets) return;
+(function () {
+  var VER = '1.1.0';
+  var PROD_CSS = 'https://cdn.jsdelivr.net/gh/brandvm/brandvm@' + VER + '/dist/styles.css';
+  var STAG = 'https://brandvm.github.io/brandvm/';
+  var DEV = 'http://localhost:3000/';
   var staging = /\.webflow\.io$/.test(location.hostname) || /\.canvas\.webflow\.com$/.test(location.hostname);
-  var dev = false;
+  var flag = false;
   if (staging) {
     try {
-      var flag = new URLSearchParams(location.search).get('bv-dev');
-      if (flag !== null) {
-        dev = flag === '1';
-        try { localStorage.setItem('bv-dev', flag); } catch (_) {}
-      } else dev = localStorage.getItem('bv-dev') === '1';
-    } catch (_) {}
+      var value = new URLSearchParams(location.search).get('bv-dev');
+      if (value !== null) {
+        flag = value === '1';
+        try { localStorage.setItem('bv-dev', value); } catch (e) {}
+      } else flag = localStorage.getItem('bv-dev') === '1';
+    } catch (e) {}
   }
-  var candidates = [];
-  if (dev) candidates.push({ css: config.devBase + 'styles.css', js: config.devBase + 'index.js' });
-  if (staging) {
-    var stamp = '?v=' + Date.now();
-    candidates.push({ css: config.stagingBase + 'styles.css' + stamp, js: config.stagingBase + 'index.js' + stamp });
-  }
-  candidates.push(config.production);
-  var css = document.getElementById('bv-css');
-  var state = window.__bvAssets = { candidates: candidates, select: select };
-  state.ready = select(0);
-
-  function select(index) {
-    var candidate = candidates[index];
-    if (!candidate) return Promise.resolve(-1);
-    if (!css) {
-      css = document.createElement('link');
-      css.id = 'bv-css';
-      css.rel = 'stylesheet';
-      document.head.appendChild(css);
-    }
-    // The production link is real markup, already encountered before this script.
-    // Do not put production JavaScript behind an extra CSS load-event dependency.
-    if (css.getAttribute('href') === candidate.css) return Promise.resolve(index);
-    return new Promise(function (resolve) {
-      var settled = false;
-      var timeout = setTimeout(function () { finish(false); }, 8000);
-      function finish(ok) {
-        if (settled) return;
-        settled = true;
-        clearTimeout(timeout);
-        css.onload = css.onerror = null;
-        resolve(ok ? index : select(index + 1));
-      }
-      css.onload = function () { finish(true); };
-      css.onerror = function () { finish(false); };
-      css.href = candidate.css;
-    });
-  }
-}
-
-prepareBrandVisionStyles({
-  "production": {
-    "version": "1.1.0",
-    "js": "https://cdn.jsdelivr.net/gh/brandvm/brandvm@1.1.0/dist/index.js",
-    "css": "https://cdn.jsdelivr.net/gh/brandvm/brandvm@1.1.0/dist/styles.css"
-  },
-  "stagingBase": "https://brandvm.github.io/brandvm/",
-  "devBase": "http://localhost:3000/"
-});
+  window.BV = { staging: staging, dev: flag, devBase: DEV, stag: STAG };
+  var base = document.getElementById('bv-css');
+  var dev = document.getElementById('bv-css-dev');
+  if (base) base.href = staging ? STAG + 'styles.css?v=' + Date.now() : PROD_CSS;
+  if (dev && !flag) dev.remove();
+})();
 </script>
-<!-- END EMBED -->
+<!-- END EMBED_CONFIG -->
 
 <!-- START FOOTER -->
 <!-- Site settings → Custom code → Footer code, before </body>. -->
 <script>
-// Called only from Webflow's before-</body> custom code.
-function loadBrandVisionScript(config) {
+(function () {
   if (window.__bvFooterStarted) return;
   window.__bvFooterStarted = true;
-  var state = window.__bvAssets;
-  if (!state) {
-    console.warn('[Brand Vision] Shared CSS Embed missing; using production assets.');
-    var css = document.getElementById('bv-css');
-    if (!css) {
-      css = document.createElement('link');
-      css.id = 'bv-css';
-      css.rel = 'stylesheet';
-      css.href = config.production.css;
-      document.head.appendChild(css);
-    }
-    return request(config.production.js);
+  var VER = '1.1.0';
+  var PROD_JS = 'https://cdn.jsdelivr.net/gh/brandvm/brandvm@' + VER + '/dist/index.js';
+  function js(src, fallback) {
+    var s = document.createElement('script');
+    s.src = src;
+    if (fallback) s.onerror = fallback;
+    document.head.appendChild(s);
   }
-  state.ready.then(start);
-
-  function start(index) {
-    if (index < 0) {
-      console.error('[Brand Vision] Custom assets could not be loaded.');
-      return;
-    }
-    request(state.candidates[index].js, function () {
-      state.ready = state.select(index + 1);
-      state.ready.then(start);
-    });
+  var C = window.BV;
+  if (!C) {
+    console.warn('[bv] Configuration Embed missing; loading production JS only.');
+    return js(PROD_JS);
   }
-  function request(src, fallback) {
-    var script = document.createElement('script');
-    script.src = src;
-    script.async = true;
-    script.onerror = function () {
-      script.remove();
-      if (fallback) fallback();
-      else console.error('[Brand Vision] Production JavaScript could not be loaded.');
-    };
-    document.body.appendChild(script);
+  var v = '?v=' + Date.now();
+  function staging() {
+    js(C.stag + 'index.js' + v, function () { js(PROD_JS); });
   }
-}
-
-loadBrandVisionScript({
-  "production": {
-    "version": "1.1.0",
-    "js": "https://cdn.jsdelivr.net/gh/brandvm/brandvm@1.1.0/dist/index.js",
-    "css": "https://cdn.jsdelivr.net/gh/brandvm/brandvm@1.1.0/dist/styles.css"
-  },
-  "stagingBase": "https://brandvm.github.io/brandvm/",
-  "devBase": "http://localhost:3000/"
-});
+  if (C.dev) js(C.devBase + 'index.js', staging);
+  else if (C.staging) staging();
+  else js(PROD_JS);
+})();
 </script>
 <!-- END FOOTER -->
