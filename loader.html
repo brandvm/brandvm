@@ -1,0 +1,168 @@
+<!-- ============================================================
+Custom-code loading — three pieces, pasted into three different places
+in Webflow. Replace REPO (all occurrences) and bump VER in pieces 2
+and 3 at each release.
+
+  prod        = pinned jsDelivr tag (immutable)
+  webflow.io  = latest pushed staging bundle (JS + CSS)
+  dev flag    = the dev server on this machine (staging only)
+
+Dev flag — set via URL param on the staging site:
+   ?bv-dev=1   → dev mode on (persists in localStorage)
+   ?bv-dev=0   → back to normal
+Console equivalent: localStorage.setItem('bv-dev','1') / removeItem.
+
+Dev mode is localhost-only by design. http://localhost is a
+potentially-trustworthy origin, so an https page is allowed to load
+it; a LAN IP is not and gets blocked as mixed content. To check work
+on another device, git push and use the staging bundle (~1 min).
+
+Everything that is not below lives in src/ and ships through the
+bundle. Resist adding site logic to any of these three snippets —
+they are bootstrap only, and they are the one part of the system
+that is not versioned, reviewable, or rollback-able.
+
+------------------------------------------------------------
+1) Head code — Site settings → Custom code → Head code.
+
+   Only things that must exist before the bundle does: meta tags the
+   browser reads at parse time, connection warming, and the pre-paint
+   scroll lock.
+
+   Site custom code is ignored by the Designer canvas, which is what
+   we want here — no scroll lock, no preloader while designing.
+------------------------------------------------------------ -->
+<meta name="theme-color" content="#000000" />
+
+<!-- Two lines on purpose: a stylesheet fetch and its font fetches are
+     CORS-different and open separate connections. -->
+<link rel="preconnect" href="https://cdn.jsdelivr.net" />
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+
+<script>
+  // Paired with the html.is-loading rules in src/styles.css. The bundle
+  // removes this when it boots; the timeout is the safety net so a 404
+  // on the bundle never leaves a permanently scroll-locked page.
+  document.documentElement.classList.add("is-loading");
+  addEventListener("load", function () {
+    setTimeout(function () {
+      document.documentElement.classList.remove("is-loading");
+    }, 3000);
+  });
+</script>
+
+<!-- ============================================================
+2) CSS + config — an HTML Embed element ON THE CANVAS, inside a
+   component that sits on every page (the navbar/header component is
+   the usual home). NOT Site settings → Head code.
+
+   Why an Embed and not head code: the Designer canvas ignores site
+   custom code and never runs scripts, but it DOES render an Embed's
+   markup — so real <link> tags are the only way to see our CSS while
+   designing. An icon font belongs here for the same reason: in head
+   code the canvas would show blank boxes where every icon should be.
+
+   Two site-CSS links, because the canvas can't choose one for itself:
+     bv-css     staging — what the canvas falls back to
+     bv-css-dev the local dev server, second so it wins the cascade
+   In the canvas both are live: run `pnpm dev` and you are styling
+   against your unsaved local edits; with the server down that link
+   just fails and staging shows through. Everywhere else the script
+   below rewrites bv-css (pinned tag on prod, cache-busted staging on
+   webflow.io) and deletes bv-css-dev unless the dev flag is on.
+
+   Because both are live in the canvas they are also ADDITIVE there:
+   deleting a rule locally does not delete staging's copy of it, so
+   there is nothing left to override and staging's rule stands.
+   Deletions cannot be verified on localhost — push, or comment out
+   the bv-css link while you check.
+
+   Refreshing the canvas: it re-renders when you close the Embed
+   editor, and reloads with the Designer tab — the canvas has no
+   live-reload of its own, so a local CSS edit needs one of those.
+   esbuild sends no Cache-Control at all; if a reload still looks
+   stale, bump the ?v= on either href. GitHub Pages caches ~10 min,
+   so bumping ?v=1 below is also how you pull fresh STAGING css in.
+
+   Placement bonus: an Embed in the body loads after Webflow's own
+   stylesheet, so our rules win ties on specificity.
+------------------------------------------------------------ -->
+<link
+  id="bv-css"
+  rel="stylesheet"
+  href="https://brandvm.github.io/REPO/styles.css?v=1"
+/>
+<link
+  id="bv-css-dev"
+  rel="stylesheet"
+  href="http://localhost:3000/styles.css"
+/>
+<script>
+  (function () {
+    var VER = "X.Y.Z";
+    var PROD_CSS =
+      "https://cdn.jsdelivr.net/gh/brandvm/REPO@" + VER + "/dist/styles.css";
+    var STAG = "https://brandvm.github.io/REPO/";
+    var DEV = "http://localhost:3000/";
+    var staging = /\.webflow\.io$/.test(location.hostname);
+    var flag = false;
+    try {
+      var q = new URLSearchParams(location.search);
+      if (q.has("bv-dev")) localStorage.setItem("bv-dev", q.get("bv-dev"));
+      flag = staging && localStorage.getItem("bv-dev") === "1";
+    } catch (e) {}
+    // Shared config — the footer loader (and the bundle) read this.
+    window.BV = { staging: staging, dev: flag, devBase: DEV, stag: STAG };
+    // Runs in the same tick as the links above, so neither the staging
+    // nor the localhost sheet ever applies on prod — both are settled
+    // before first paint.
+    var base = document.getElementById("bv-css");
+    var dev = document.getElementById("bv-css-dev");
+    if (base)
+      base.href = staging ? STAG + "styles.css?v=" + Date.now() : PROD_CSS;
+    if (dev && !flag) dev.parentNode.removeChild(dev);
+  })();
+</script>
+
+<!-- ============================================================
+3) JS loader — Site settings → Custom code → Footer code.
+
+Nothing else belongs in the footer. Third-party libraries go through
+`pnpm add` and get bundled: the loader appends its script tag
+dynamically, which makes it async, so a sibling <script defer> in the
+footer is no longer guaranteed to execute first and the bundle can
+find its global undefined.
+
+Rollback = revert the two VER strings and publish.
+============================================================ -->
+<script>
+  (function () {
+    var VER = "X.Y.Z";
+    var PROD_JS =
+      "https://cdn.jsdelivr.net/gh/brandvm/REPO@" + VER + "/dist/index.js";
+    function js(src, fallback) {
+      var s = document.createElement("script");
+      s.src = src;
+      if (fallback) s.onerror = fallback;
+      document.head.appendChild(s);
+    }
+    var C = window.BV;
+    if (!C) {
+      // the CSS Embed is missing from this page — styles are gone too
+      console.warn(
+        "[bv] CSS embed not found on this page; loading prod JS only.",
+      );
+      return js(PROD_JS);
+    }
+    var v = "?v=" + Date.now();
+    if (C.dev)
+      js(C.devBase + "index.js", function () {
+        js(C.stag + "index.js" + v);
+      });
+    else if (C.staging)
+      js(C.stag + "index.js" + v, function () {
+        js(PROD_JS);
+      });
+    else js(PROD_JS);
+  })();
+</script>

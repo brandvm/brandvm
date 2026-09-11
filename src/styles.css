@@ -1,0 +1,716 @@
+/* Global site styles — source of truth for custom CSS.
+   Built to dist/styles.css (minified) and released via jsDelivr pinned tags.
+   Keep Designer classes for layout; this file is for tokens, resets,
+   utilities, and JS-paired styles that Webflow classes cannot express.
+
+   CASCADE NOTES — read before adding rules.
+   1. This sheet is injected by an HTML Embed in the body (see loader.html),
+      so it lands after webflow.css. Ties on specificity go to us.
+   2. That only works at EQUAL specificity. `h1 {}` beats Webflow's `h1 {}`,
+      but `:where(h1) {}` (0-0-0) loses to it (0-0-1). Use :where() only for
+      our own base layer that Designer classes should be free to override.
+   3. Never wrap overrides in @layer. Webflow's CSS is unlayered, and
+      unlayered always beats layered regardless of order.
+   4. Section order IS the tiebreaker — most of this file sits at 0-1-0
+      (one class, or one attribute selector), so when two rules collide
+      the later one wins. Sections run broad to narrow:
+
+        01 TOKENS               variables only, no output
+        02 BASE                 our reset and element defaults
+        03 WEBFLOW NEUTRALIZERS undo what Webflow's normalize invents
+        04 DOCUMENT STATE       runtime classes on <html>, set by JS
+        05 COMPONENTS & MOTION  named things: .link-underline, marquees
+        06 UTILITIES            single-purpose, must beat components
+        07 ACCESSIBILITY        focus rings and reduced-motion trumps
+        08 EDITOR & DEV SUPPORTS canvas-only escape hatches
+
+      Add rules to the section they belong to, not to the end of the
+      file — appending is how a utility silently stops winning.
+   ============================================================ */
+
+/* ============================================================
+   01. TOKENS
+   ============================================================ */
+
+:root {
+  /* Fluid scale — sets the root font-size so every rem value coming out
+     of the Designer scales with the viewport. Ideal = the width the
+     design was built at. These starting widths come from the reference;
+     tune them to match each project's design. */
+  --size-unit: 16;
+  --size-container-ideal: 1440;
+  --size-container-min: 991px;
+  --size-container-max: 1440px;
+
+  --size-container: clamp(
+    var(--size-container-min),
+    100vw,
+    var(--size-container-max)
+  );
+  --size-font: calc(
+    var(--size-container) / (var(--size-container-ideal) / var(--size-unit))
+  );
+
+  font-size: var(--size-font);
+
+  /* Colour — wire these to the Webflow variables once the palette is in
+     the Designer (`var(--_colors--accent, …)`). Until then they inherit,
+     so nothing renders wrong. */
+  --color-accent: currentColor;
+
+  /* Motion */
+  --ease-bbs: cubic-bezier(0.64, 0.05, 0, 1);
+  --dur-bbs: 800ms;
+
+  /* Set this to the fixed header height when the navigation is built. */
+  --nav-h: 0rem;
+
+  /* Underline effect */
+  --underline-top: 95%;
+  --underline-height: 1px;
+  --inline-underline-opacity: 0.48;
+
+  /* Loops */
+  --loop-x-duration: 60s;
+  --loop-y-duration: 32s;
+
+  /* SVG dash */
+  --svg-dash-duration: 8s;
+  --svg-dash-offset: 600;
+
+  /* Button icon */
+  --button-icon-shift: 0.25em;
+
+  /* Zoom */
+  --image-zoom-scale: 1.12;
+}
+
+/* Tablet */
+@media screen and (max-width: 991px) {
+  :root {
+    --size-container-ideal: 834;
+    --size-container-min: 768px;
+    --size-container-max: 991px;
+  }
+}
+
+/* Mobile landscape */
+@media screen and (max-width: 767px) {
+  :root {
+    --size-container-ideal: 430;
+    --size-container-min: 480px;
+    --size-container-max: 767px;
+  }
+}
+
+/* Mobile portrait */
+@media screen and (max-width: 479px) {
+  :root {
+    --size-container-ideal: 430;
+    --size-container-min: 320px;
+    --size-container-max: 428px;
+  }
+}
+
+/* ============================================================
+   02. BASE
+   ============================================================ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  text-decoration-skip-ink: auto;
+  text-decoration-thickness: 8%;
+  text-underline-offset: -8%;
+  text-underline-position: from-font;
+}
+
+html {
+  scroll-behavior: initial;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* clip, not hidden — overflow:hidden here breaks position:sticky
+   descendants. Ignored by Safari < 16, which just means no clipping. */
+html,
+body {
+  overflow-x: clip;
+}
+
+body {
+  font-feature-settings: "liga" 1, "calt" 1;
+}
+
+/* Element defaults Webflow's normalize invents. Designer classes are
+   0-1-0 or higher, so these never fight real styling. */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+figure,
+blockquote {
+  margin: 0;
+}
+
+ul,
+ol {
+  margin: 0;
+  padding: 0;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+img,
+video {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+svg {
+  max-width: none;
+  height: auto;
+  vertical-align: middle;
+}
+
+/* ============================================================
+   03. WEBFLOW NEUTRALIZERS
+   ============================================================ */
+
+/* Clearfix pseudos. Webflow puts ::before/::after on most wrappers;
+   inside a flex or grid parent they become phantom items and eat gap. */
+.w-container::before,
+.w-container::after,
+.w-row::before,
+.w-row::after,
+.w-clearfix::before,
+.w-clearfix::after,
+.w-form::before,
+.w-form::after,
+.w-richtext::before,
+.w-richtext::after,
+.w-checkbox::before,
+.w-checkbox::after,
+.w-radio::before,
+.w-radio::after,
+.w-tab-content::before,
+.w-tab-content::after,
+.w-tab-pane::before,
+.w-tab-pane::after,
+.w-layout-blockcontainer::before,
+.w-layout-blockcontainer::after {
+  display: none;
+}
+
+/* Container ships a 940px cap and its own breakpoints; swap both for the
+   Layout token so a bare Container inherits the system width. Width
+   variants must be COMBO classes — a lone class on a Container is 0-1-0
+   and loses to this rule on source order. Fallback is `none`, so a
+   renamed collection/group/variable degrades to uncapped, not to 940. */
+.w-layout-blockcontainer {
+  max-width: var(--_layout---container--max-width, none);
+}
+
+/* Forms — Webflow hardcodes a #3898ec focus ring and grey/pink
+   success/error panels. The form :focus-visible rules in §07 restore the
+   outline that Webflow's :focus rule removes. */
+.w-form {
+  margin: 0;
+}
+
+.w-form-done,
+.w-form-fail {
+  margin: 0;
+  padding: 0;
+  background: none;
+  text-align: inherit;
+}
+
+.w-input,
+.w-select {
+  font: inherit;
+  color: inherit;
+}
+
+.w-input:focus,
+.w-select:focus {
+  border-color: currentColor;
+}
+
+.w-checkbox,
+.w-radio {
+  display: block;
+  margin: 0;
+  padding: 0;
+}
+
+.w-checkbox-input,
+.w-radio-input {
+  float: none;
+  margin: 0;
+}
+
+/* Components. Only the defaults that are always in the way — navbar
+   internals are left alone deliberately, since Webflow's floats are
+   load-bearing for the built-in nav. */
+.w-nav {
+  background-color: transparent;
+}
+
+.w-slider {
+  height: auto;
+  background: transparent;
+}
+
+.w-tab-link {
+  padding: 0;
+  background: none;
+}
+
+.w-tab-content,
+.w-tab-pane {
+  overflow: visible;
+}
+
+.w-dropdown-toggle {
+  padding: 0;
+}
+
+.w-background-video > video {
+  object-fit: cover;
+}
+
+/* CMS empty states */
+.w-dyn-empty {
+  padding: 0;
+  background: none;
+}
+
+.w-dyn-bind-empty {
+  display: none;
+}
+
+/* Rich text */
+.w-richtext > :first-child,
+.w-richtext div:first-child > :first-child {
+  margin-top: 0;
+}
+
+.w-richtext > :last-child,
+.w-richtext div:first-child > :last-child {
+  margin-bottom: 0;
+}
+
+.w-richtext ul,
+.w-richtext ol {
+  padding-left: 1.25em; /* restore the indent §02 stripped */
+}
+
+.w-richtext figure {
+  margin: 0;
+}
+
+/* Image figures only — the same padding-bottom on a video figure IS the
+   aspect ratio for its absolutely-positioned iframe. */
+.w-richtext figure.w-richtext-figure-type-image > div {
+  padding-bottom: 0 !important;
+}
+
+.w-richtext figure img {
+  width: 100%;
+}
+
+/* Opt-in: put display:contents on an Embed so its children join the
+   parent's flex/grid. Add `data-embed="contents"` in element settings. */
+[data-embed="contents"] {
+  display: contents;
+}
+
+/* ============================================================
+   04. DOCUMENT STATE
+   ============================================================ */
+
+/* The head bootstrap in loader.html adds .is-loading before first paint.
+   src/index.ts removes it when the bundle boots; the head timeout provides
+   a fallback if the bundle cannot load. */
+html.is-loading,
+html.is-loading body {
+  overflow: hidden;
+  height: 100%;
+}
+
+/* ============================================================
+   05. COMPONENTS & MOTION
+   ============================================================ */
+
+.link-underline {
+  position: relative;
+}
+
+.link-underline::after {
+  content: "";
+  position: absolute;
+  top: var(--underline-top);
+  left: 0%;
+  height: var(--underline-height);
+  width: 0%;
+  background: currentColor;
+  transition: width var(--dur-bbs) var(--ease-bbs);
+}
+
+.link-underline:hover::after {
+  width: 100%;
+}
+
+.link-underline:not(:hover)::after {
+  left: auto;
+  right: 0%;
+  width: 0%;
+}
+
+/* Real text-decoration, not a pseudo-element: this is the variant for
+   links inside a paragraph, and an absolutely-positioned ::after cannot
+   follow one across a line break — it would draw a single bar over the
+   whole inline box. Decoration wraps per line fragment for free, and
+   inherits the skip-ink / thickness / offset set globally in 02 BASE.
+
+   The 0-1-0 class beats `a { text-decoration: none }` in 02 BASE.
+   First color declaration is the fallback where color-mix is missing:
+   a full-strength underline rather than none at all.
+
+   Links inside Content RTE get this without the class: the CMS generates
+   the <a> and there is nothing to put a class on. Listed here rather than
+   copied into the prose block below so the treatment has one definition. */
+.inline-link-underline,
+.content-rte a {
+  text-decoration-line: underline;
+  text-decoration-color: currentColor;
+  text-decoration-color: color-mix(
+    in srgb,
+    currentColor calc(var(--inline-underline-opacity) * 100%),
+    transparent
+  );
+  transition: text-decoration-color var(--dur-bbs) var(--ease-bbs);
+}
+
+.inline-link-underline:hover,
+.content-rte a:hover {
+  text-decoration-color: currentColor;
+}
+
+/* Button link — the icon nudges forward on hover. The transition sits on
+   the icon rather than on the :hover rule so it eases back out when the
+   pointer leaves, not just on the way in. */
+.button-link .icon {
+  transition: transform var(--dur-bbs) var(--ease-bbs);
+}
+
+.button-link:hover .icon {
+  transform: translateX(var(--button-icon-shift));
+}
+
+.image-w img {
+  transition: transform var(--dur-bbs) var(--ease-bbs);
+}
+
+.image-w:hover img {
+  transform: scale(var(--image-zoom-scale));
+}
+
+/* Marquees — opt in after supplying duplicated tracks in markup or JS. */
+@keyframes loopX {
+  from {
+    transform: translateX(0%);
+  }
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes loopY {
+  from {
+    transform: translateY(0%);
+  }
+  to {
+    transform: translateY(-100%);
+  }
+}
+
+.loop-animate-x {
+  animation: loopX var(--loop-x-duration) linear infinite;
+  will-change: transform;
+}
+
+.loop-animate-y {
+  animation: loopY var(--loop-y-duration) linear infinite;
+  will-change: transform;
+}
+
+.loop-animate-x.reverse,
+.loop-animate-y.reverse {
+  animation-direction: reverse;
+}
+
+@keyframes svgDash {
+  to {
+    stroke-dashoffset: var(--svg-dash-offset);
+  }
+}
+
+.svg-animate-line {
+  stroke-dasharray: 10 10 !important;
+  animation: svgDash var(--svg-dash-duration) linear infinite;
+}
+
+.svg-animate-line.reverse {
+  animation-direction: reverse;
+}
+
+/* Prose rhythm. The Designer can style the Rich Text wrapper but never the
+   h/p/ul/ol/li inside it — the CMS generates those and there is nothing to
+   hang a class on, so their spacing has to come from here.
+
+   Opted into with the Content RTE class, not applied to every .w-richtext.
+   §02 zeroes these margins because components space themselves with flex
+   gaps, and element margins there would add to the gap rather than replace
+   it; a Rich Text used as a component field wants to stay in that world.
+   Marking the ones that are prose keeps the choice explicit and reversible
+   per element.
+
+   :where() keeps the inner half at zero specificity, so the whole selector
+   is 0-1-0 — enough to beat the 0-0-1 element reset, weak enough that a
+   Designer class still wins. */
+.content-rte :where(h1, h2, h3, h4, h5, h6, p) {
+  margin-top: 1em;
+  margin-bottom: 0.5em;
+}
+
+.content-rte :where(ul, ol) {
+  margin-top: 1em;
+  margin-bottom: 1em;
+}
+
+.content-rte li {
+  margin-bottom: 0.25em;
+}
+
+/* The list indent and the first/last-child margin trims already live in
+   §03 — that is where the rest of the Rich Text patching sits, and its
+   versions also cover the wrapper div Webflow sometimes nests. */
+
+/* ============================================================
+   06. UTILITIES
+   ============================================================ */
+
+/* Anchor offset for the fixed header */
+:where([id]) {
+  scroll-margin-top: var(--nav-h);
+}
+
+/* Opt-in scrollbar hiding — per element, never global */
+[scroll-show="false"] {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+[scroll-show="false"]::-webkit-scrollbar {
+  display: none;
+}
+
+/* Line clamp */
+[data-truncate] {
+  --truncate-lines: 1;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: var(--truncate-lines);
+  line-clamp: var(--truncate-lines);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-wrap: break-word;
+}
+
+[data-truncate="1"] {
+  --truncate-lines: 1;
+}
+
+[data-truncate="2"] {
+  --truncate-lines: 2;
+}
+
+[data-truncate="3"] {
+  --truncate-lines: 3;
+}
+
+/* Read more — opt in only with a JS toggle that flips .is-expanded
+   and updates the toggle control's aria-expanded state. */
+[data-readmore="text"] {
+  --readmore-lines: 2;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: var(--readmore-lines);
+  line-clamp: var(--readmore-lines);
+  overflow: hidden;
+}
+
+[data-readmore="text"].is-expanded {
+  display: block;
+  -webkit-line-clamp: unset;
+  line-clamp: none;
+}
+
+[data-readmore="text"] > :first-child {
+  margin-top: 0;
+}
+
+[data-readmore="text"] > :last-child {
+  margin-bottom: 0;
+}
+
+[data-readmore="toggle"] {
+  cursor: pointer;
+}
+
+/* Figma width passthrough — set --figma-size to the raw design pixel
+   number. rem keeps the conversion tied to the root scale even inside
+   components with a different font-size. */
+[style*="--figma-size"] {
+  max-width: calc(1rem * var(--figma-size) / var(--size-unit));
+}
+
+/* Gradient fills */
+[data-gradient-text] {
+  -webkit-background-clip: text;
+  background-clip: text;
+  background-repeat: repeat-x;
+  -webkit-text-fill-color: transparent;
+  color: inherit;
+}
+
+/* Edge fade masks — set --mask-*-size to tune a single edge */
+.mask-top,
+.mask-bottom,
+.mask-left,
+.mask-right {
+  --mask-fade: 14%;
+
+  -webkit-mask-image: linear-gradient(
+      to bottom,
+      transparent 0,
+      #000 var(--mask-t, 0%),
+      #000 calc(100% - var(--mask-b, 0%)),
+      transparent 100%
+    ),
+    linear-gradient(
+      to right,
+      transparent 0,
+      #000 var(--mask-l, 0%),
+      #000 calc(100% - var(--mask-r, 0%)),
+      transparent 100%
+    );
+  mask-image: linear-gradient(
+      to bottom,
+      transparent 0,
+      #000 var(--mask-t, 0%),
+      #000 calc(100% - var(--mask-b, 0%)),
+      transparent 100%
+    ),
+    linear-gradient(
+      to right,
+      transparent 0,
+      #000 var(--mask-l, 0%),
+      #000 calc(100% - var(--mask-r, 0%)),
+      transparent 100%
+    );
+
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+}
+
+.mask-top {
+  --mask-t: var(--mask-top-size, var(--mask-fade));
+}
+
+.mask-bottom {
+  --mask-b: var(--mask-bottom-size, var(--mask-fade));
+}
+
+.mask-left {
+  --mask-l: var(--mask-left-size, var(--mask-fade));
+}
+
+.mask-right {
+  --mask-r: var(--mask-right-size, var(--mask-fade));
+}
+
+/* Selection */
+@supports (background-color: color-mix(in srgb, black 10%, transparent)) {
+  ::selection {
+    background-color: color-mix(in srgb, currentColor 12%, transparent);
+    color: var(--color-accent);
+    text-shadow: none;
+  }
+}
+
+/* ============================================================
+   07. ACCESSIBILITY
+   ============================================================ */
+
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Match Webflow's .w-input:focus and .w-select:focus specificity so
+   keyboard focus stays visible on form controls. */
+:focus-visible,
+.w-input:focus-visible,
+.w-select:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loop-animate-x,
+  .loop-animate-y,
+  .svg-animate-line {
+    animation: none !important;
+  }
+
+  .image-w img,
+  .button-link .icon,
+  .link-underline::after,
+  .inline-link-underline,
+  .content-rte a {
+    transition: none !important;
+  }
+
+  .image-w:hover img,
+  .button-link:hover .icon {
+    transform: none;
+  }
+}
+
+/* ============================================================
+   08. EDITOR & DEV SUPPORTS
+   ============================================================ */
+
+/* Optional class for code-only embeds that should occupy no layout space. */
+.g-embed-code {
+  display: none !important;
+}
+
+/* Keep future JS-driven entrance animations visible in the Editor. */
+.w-editor [data-anim] {
+  visibility: visible !important;
+  opacity: 1 !important;
+  transform: none !important;
+}
