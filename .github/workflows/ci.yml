@@ -1,0 +1,45 @@
+name: Validate and stage
+on:
+  pull_request:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: pnpm/action-setup@v4
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm validate
+      - name: Require delivery artifacts in git
+        run: git ls-files --error-unmatch dist/index.js dist/styles.css dist/version.json loader.html webflow/head-assets.html webflow/designer-css.html webflow/footer-assets.html
+      - name: Check committed build and snippets
+        run: git diff --exit-code -- dist loader.html webflow/head-assets.html webflow/designer-css.html webflow/footer-assets.html
+      - uses: actions/upload-pages-artifact@v3
+        if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
+        with:
+          path: dist
+  staging:
+    if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
+    needs: validate
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    concurrency:
+      group: github-pages
+      cancel-in-progress: false
+    steps:
+      - uses: actions/deploy-pages@v4
+        id: deployment

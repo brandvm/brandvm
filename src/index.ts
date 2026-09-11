@@ -1,13 +1,25 @@
-// Entry point. Keep this file a manifest: one import and one call per
-// module, so what runs on the site is readable at a glance. Feature code
-// lives in src/modules/<name>.ts and exports a single init function that
-// no-ops when its selector is absent from the page.
+import { initLenis } from './modules/lenis';
+import { initNewsletter } from './modules/newsletter';
+import { initFlareBorder } from './modules/flare-border';
+import { initCounter } from './modules/counter';
+import { initDotMap } from './modules/dot-map';
+import { initReadMore } from './modules/read-more';
+import { initDropdownClose } from './modules/dropdown-close';
 
-// import { initExample } from './modules/example';
+function boot() {
+  if (window.__brandvmBooted) return;
+  window.__brandvmBooted = true;
+  // Webflow supplies jQuery / GSAP. Do not bundle another copy.
+  initLenis();
+  initNewsletter();
+  initFlareBorder();
+  initCounter();
+  initDotMap();
+  initReadMore();
+  initDropdownClose();
+  document.documentElement.dataset.bvVersion = __BV_VERSION__;
+}
 
-// initExample();
-
-// Release the pre-paint scroll lock set by the head bootstrap (loader.html).
-// Must stay last, and must stay unconditional — an early return above it
-// leaves the page permanently locked until the snippet's 3s timeout fires.
-document.documentElement.classList.remove('is-loading');
+// Works whether the loader completes before or after Webflow's ready event.
+window.Webflow = window.Webflow || [];
+window.Webflow.push(boot);

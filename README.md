@@ -1,153 +1,94 @@
-# Brand Vision — Webflow custom code template
+# Brand Vision custom code
 
-TypeScript + esbuild toolchain for Webflow client sites — JS **and** CSS.
-Dev = localhost live reload · Staging = auto-deploy on push · Prod = pinned jsDelivr tag.
+The organization repository for the shared CSS and JavaScript used by [brandvm.com](https://www.brandvm.com).
 
-Source files: `src/index.ts` (bundled to `dist/index.js`) and `src/styles.css`
-(minified to `dist/styles.css`). Both ship together under one version tag.
+This migration replaces the starter template with the existing site's actual code. The initial **v1.1.0** build must reproduce the currently served CSS and JavaScript byte for byte. Moving the source must not redesign the site or change when its features initialize.
 
-The Webflow Designer owns layout and classes. Nothing in this repo generates
-markup.
+**Repository setup does not update or publish Webflow.** The site remains on its existing source until a separate, verified source switch.
 
-## Requirements
+## Development
 
-- [Node](https://nodejs.org) 22 (the version CI builds with)
-- [pnpm](https://pnpm.io/installation) 11 — `corepack enable`
+Use Node 22.13 or newer and pnpm 11.25.0.
 
-```bash
-pnpm install
+```sh
+pnpm install --frozen-lockfile
+pnpm dev
 ```
 
-## Commands
+The local server binds to `127.0.0.1:3000`. The existing Webflow staging loader supports `?bv-dev=1` and `?bv-dev=0`. Production domains ignore these flags. The production build contains no live-reload code.
 
-```bash
-pnpm dev      # esbuild watch + server on :3000 (unminified, sourcemaps)
-pnpm build    # minified -> dist/
-pnpm check    # tsc --noEmit
+```sh
+pnpm check             # strict TypeScript
+pnpm build             # production dist/; remove stale dev outputs
+pnpm snippets          # generate asset-only integration snippets
+pnpm test              # runtime, loader and Designer compatibility
+pnpm verify:migration  # v1.1.0 sources and build match the original release
+pnpm validate          # run all the above checks in order
 ```
 
-## New project checklist
+## Structure
 
-1. Use this template → create repo `wf-<client>` (public)
-2. `package.json` → change `"name"`
-3. Repo Settings → Pages → Source: **GitHub Actions**
-4. Repo → Settings → Collaborators and teams → add the `developers` team (Write)
-5. Paste the three snippets from `loader.html` into Webflow, replacing `REPO`
-   with this repo's name in each — head code, an **Embed on the canvas**, and
-   footer code. Piece 2 must be an Embed inside a component that appears on
-   every page; site custom code does not render in the Designer.
-6. Publish to staging and confirm the canvas picks up `styles.css`
-
-## Daily
-
-- `pnpm dev`, then on the `.webflow.io` site append `?bv-dev=1` to the URL →
-  your browser loads localhost with live reload. `?bv-dev=0` to exit.
-- `git push` → client-facing staging bundle updates in ~1 min (no Webflow publish)
-- Live reload works in the browser. It does **not** work on the Designer canvas,
-  which never runs scripts — reload the Designer tab instead.
-
-## Release (launch / retainer updates)
-
-```
-pnpm build
-git add -f dist && git commit -m "release: vX.Y.Z"
-git tag vX.Y.Z && git push && git push --tags
-git rm -r --cached dist && git commit -m "chore: untrack dist after vX.Y.Z"
-git push
+```text
+src/index.ts                 existing Webflow-ready initialization order
+src/modules/                 seven existing features
+src/globals.d.ts              types for external runtime dependencies
+src/styles.css               actual site CSS in its existing cascade order
+dist/                        committed JS, CSS and version manifest
+build.mjs                    esbuild production and local development builds
+webflow/deployment.json       organization CDN and staging addresses
+webflow/assets-loader.js      existing production loader, unchanged
+webflow/head-assets.html      generated head link and bootstrap only
+webflow/designer-css.html     generated Designer link and published cleanup
+webflow/footer-assets.html    generated footer integration note
+loader.html                  generated guide to the three integration locations
+migration/baseline.json       original source and CDN asset fingerprints
+tests/                       focused behavior and integration checks
 ```
 
-`dist/` is gitignored for day-to-day work, so the `-f` is required — without
-it the release commit is empty, the tag carries no build, and jsDelivr serves
-a 404 to the live site.
+The modules are Lenis initialization, newsletter Swiper, flare borders, counters, dot map, read-more, and dropdown closing. jQuery and GSAP remain supplied by Webflow. Lenis stays optional. Swiper still downloads only when a slider approaches the viewport; its package is a development dependency for types, not a bundled runtime.
 
-The un-track at the end is not optional tidying. `.gitignore` only governs
-files git is not already *tracking*, so the release commit permanently
-cancels the ignore rule for `dist/`: from that point on every rebuild shows
-as a modification and `git add .` sweeps a minified bundle into whatever
-commit you are writing. `--cached` un-tracks it but leaves the files on
-disk, so the ignore rule applies again. The tag is untouched — it still
-points at the commit that contains the build, and jsDelivr serves that
-forever.
+## Migration boundary
 
-Then bump `VER` in BOTH Webflow snippets (the CSS/config Embed and the footer
-loader) → publish staging → verify → publish prod.
-Rollback = revert the version strings. Never use `@latest` or branch URLs in prod.
+The source is `hamounbv/brandvm` at commit `cd6162d28b82e434c44a0a6bf62fea4d50ef4bf3`; production currently uses its `v1.1.0` assets. The supplied `hamoun/brandvm` URL did not resolve. The source commit, release commit, downloaded asset sizes and SHA-256 hashes are recorded in `migration/baseline.json`.
 
-**Tag rules (learned the hard way):**
+The template's generic CSS, 1440px sizing defaults, resets, pre-paint scroll lock, body stylesheet switching, and alternate footer loader are not used. Those would change the existing site. The actual stylesheet retains its 1680px scale, tokens, selectors, media queries and rule order. The runtime entry point, feature implementations, public APIs, dependency handling and Webflow-ready callback remain unchanged.
 
-- `dist/` must be committed *before* the tag is pushed
-- A pushed tag must **never** be moved (`tag -f`) — jsDelivr snapshots a
-  version once and keeps it forever, so a half-baked snapshot is permanent.
-  Botched release? Cut the next patch version instead
-- Un-track `dist/` again once the tag is pushed, or the ignore rule stays
-  dead for every commit after the first release
+The initial build is **content-identical to the current v1.1.0 release**, rather than an attempted fix for its outstanding loading issues. Homepage animation changes and the proposed Contact-only eager HubSpot form are separate work. Page and component code remains in Webflow.
 
-**Before attaching a custom domain,** confirm the repo actually has the tag
-`VER` points at. A site running on `.webflow.io` never touches the prod URLs,
-so a placeholder `VER = "X.Y.Z"` stays invisible until the moment the domain
-goes live — and then both CSS and JS 404 at once.
+Migration verification checks the source files, the unchanged loader, and all three production artifacts. These fingerprints remain an archived baseline after migration. Intentional behavior changes must use a new runtime version and appropriate feature tests; do not overwrite the baseline or reuse the v1.1.0 tag.
 
-## How the files reach the page
+## Delivery and CI
 
-Three snippets, documented in [`loader.html`](loader.html) — read that file
-before touching any of them.
+Pull requests run validation. A validated push to `master` publishes the built assets to GitHub Pages when Pages is configured to use GitHub Actions. The workflow has no Webflow publishing step, Webflow API call, or Webflow token.
 
-| Environment    | Source                  |
-| -------------- | ----------------------- |
-| Production     | pinned jsDelivr tag     |
-| `*.webflow.io` | GitHub Pages staging    |
-| `?bv-dev=1`    | `http://localhost:3000` |
+| Environment after a future source switch | Assets |
+| --- | --- |
+| Production | `https://cdn.jsdelivr.net/gh/brandvm/brandvm@1.1.0/dist/` |
+| Webflow staging | `https://brandvm.github.io/brandvm/` |
+| Local development on Webflow staging | `http://localhost:3000/` |
 
-Dev mode is localhost-only by design: `http://localhost` is a
-potentially-trustworthy origin so an https page may load it, but a LAN IP is
-not and gets blocked as mixed content. To check work on another device, push
-and use the staging bundle.
+Production artifacts stay committed. CI rebuilds them and rejects drift. Release tags therefore contain usable `dist/index.js`, `dist/styles.css` and `dist/version.json`; no force-add/untrack release cycle is needed.
 
-Pushing to `master` triggers
-[`.github/workflows/staging.yml`](.github/workflows/staging.yml), which runs
-`pnpm build` and publishes `dist/` to GitHub Pages. Production is pinned to a
-tag, so a staging deploy never touches the live site.
+## Future Webflow source switch — separate from this repository migration
 
-## Project structure
+See [loader.html](loader.html) and [migration/README.md](migration/README.md). Preserve the current loader and placement. The required delivery substitutions are:
 
-```
-src/
-  index.ts            entry point; a manifest of module imports and calls
-  styles.css          the whole stylesheet, in numbered sections
-  modules/            one file per feature, each exporting an init function
-build.mjs             esbuild config and dev server
-loader.html           the three Webflow snippets, documented
+```text
+hamounbv/brandvm@1.1.0  -> brandvm/brandvm@1.1.0
+https://hamounbv.github.io/brandvm/ -> https://brandvm.github.io/brandvm/
 ```
 
-`src/styles.css` opens with cascade notes and a numbered table of contents.
-Section order is the tiebreaker for same-specificity rules — add to the
-section a rule belongs to, never to the end of the file.
+Replace only the existing custom asset portions of the head and shared Embed. The generated snippets deliberately omit site tracking, metadata, schema, menu breakpoint styles and page-specific code, so they cannot be mistaken for full replacements of those blocks. The existing footer needs no extra script tag.
 
+The shared Embed retains a real stylesheet link so CSS is visible in Designer. Published-page cleanup follows the current implementation: when `#bv-site-css` exists in the head, it removes the duplicate Designer link. This preserves the current published cascade and does not introduce another CSS-placement change.
 
-The stylesheet includes the shared CSS foundation: fluid root sizing, element
-resets, Webflow default overrides, opt-in effects and utilities, rich-text
-spacing, keyboard focus styles, and reduced-motion support. Tune the sizing
-tokens, wire the accent and container width to the site's Webflow variables,
-and set `--nav-h` when adding a fixed header. Marquees need duplicated tracks;
-read-more controls need their own JavaScript toggle.
+Before a source switch, verify both pinned CDN assets and test Home, Contact, Our Work, Insights, a service page and a case study on staging at desktop and mobile widths. Compare cold and cached loads. Identical code preserves behavior but does not guarantee identical CDN connection/cache timing, or fix pre-existing page-load delays. Publish changes to Webflow only as a separate authorized step.
 
-TypeScript runs `strict`, targets ES2019, and defines no path aliases —
-imports are relative.
+## Later releases
 
-## Webflow MCP
+1. Make and test an intentional change on a branch; bump `package.json` version and the three production version/URL fields in `webflow/deployment.json` together.
+2. Run `pnpm validate`; commit source, build, configuration and generated snippets.
+3. Merge after CI passes; verify the staging assets and relevant site behavior.
+4. Create an immutable tag `v<version>` on the validated commit. Verify its jsDelivr files before proposing the source/version change in Webflow.
 
-`.mcp.json` carries the Webflow MCP server definition. Approve the project
-server on first launch, then run `/mcp` to authorise Webflow — OAuth is
-per-machine, so this is repeated on each new machine.
-
-## Auditing before launch
-
-Before shipping, check every JS module and CSS block against the live markup —
-modules whose selectors/attributes appear on no page are dead weight
-(the TeraWulf migration dropped 5 of 7 inherited modules this way).
-
-## Handoff (site leaving the agency)
-
-Build → paste `dist/index.js` inline into Site footer, CSS inline into the
-canvas Embed → remove loader + external tags → publish → zip `src/` for the
-client → archive repo.
+Never move a published tag or use branch/`@latest` URLs in production. A source rollback swaps delivery addresses back while retaining the same surrounding Webflow custom code.

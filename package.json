@@ -1,15 +1,25 @@
 {
-  "name": "wf-template",
+  "name": "brandvm",
+  "version": "1.1.0",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@11.25.0",
+  "engines": {
+    "node": ">=22.13"
+  },
   "scripts": {
     "dev": "node build.mjs --dev",
     "build": "node build.mjs",
-    "check": "tsc --noEmit"
+    "check": "tsc --noEmit",
+    "test": "node --test tests/*.test.cjs",
+    "snippets": "node scripts/snippets.mjs",
+    "verify:migration": "node scripts/verify-migration.mjs",
+    "validate": "pnpm check && pnpm build && pnpm snippets && pnpm test && pnpm verify:migration"
   },
   "devDependencies": {
-    "esbuild": "^0.28.2",
-    "typescript": "^7.0.2"
+    "@types/jquery": "^3.5.32",
+    "esbuild": "0.28.2",
+    "swiper": "^11.2.10",
+    "typescript": "7.0.2"
   }
 }
