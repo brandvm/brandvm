@@ -1,0 +1,40 @@
+{
+  "sourceRepository": "hamounbv/brandvm",
+  "sourceCommit": "cd6162d28b82e434c44a0a6bf62fea4d50ef4bf3",
+  "sourceReleaseCommit": "3b96e5f117b57d387a908cecaa7dff25f9015d7d",
+  "runtimeVersion": "1.1.0",
+  "assets": {
+    "dist/index.js": {
+      "sourceUrl": "https://cdn.jsdelivr.net/gh/hamounbv/brandvm@1.1.0/dist/index.js",
+      "bytes": 19929,
+      "sha256": "ab54e847630b09dd285411e660a6c87b4f6b90968d5c7bd5943e45442d20996d"
+    },
+    "dist/styles.css": {
+      "sourceUrl": "https://cdn.jsdelivr.net/gh/hamounbv/brandvm@1.1.0/dist/styles.css",
+      "bytes": 17182,
+      "sha256": "244fcc0ee21a0d3db887b82e234b218519ddf81a4ec4cf4049d3b8eabe4fae68"
+    },
+    "dist/version.json": {
+      "sourceUrl": "https://cdn.jsdelivr.net/gh/hamounbv/brandvm@1.1.0/dist/version.json",
+      "bytes": 20,
+      "sha256": "0b561fd56d375b2c3cce7b5ce73605d405291ce2cbb1ac016945384fc5ea68e5"
+    }
+  },
+  "sourceFiles": {
+    "src/globals.d.ts": "25ef9984d79ba4c95929723291a374f72a795ca1ea411e09096b6d34d8e2f28e",
+    "src/index.ts": "39d18b98127c9eabdbc84cd8a1996aee6727a777e704128073e6472074bf6bc4",
+    "src/modules/counter.ts": "76d3de19b0045bf0dcfbb2adfe718e415628fa0357092705bb2f5bfc1bb9165c",
+    "src/modules/dot-map.ts": "815f960d779762b0efa403ae4211be7f8f9a6dd793515ff5fd13d53b534540d6",
+    "src/modules/dropdown-close.ts": "b20f7f347b7e3851c37254f058017cd3adb048b1a75f15d7c9279e3238949bb2",
+    "src/modules/flare-border.ts": "394e3afba2a2b19b2e5e0f8844cc3419beeaefc2de878682b17738b0bf5afb05",
+    "src/modules/lenis.ts": "8a20fe8f55282b03482f01df353cf3d54cb57b55bee1af1fab573dccd4dc9993",
+    "src/modules/newsletter.ts": "8498de1799191e48db5ec7c82cd5c8310f064edf8c5b231dfd858dc34bf95e0e",
+    "src/modules/read-more.ts": "3df25952a173b7d1ec4451262c10e95c7b20aa85cd052cfe7259c7e071549a1e",
+    "src/styles.css": "8e449761debf691d97b1518948f92eab2ed009b3eae42e3a78455eb4555f0726",
+    "webflow/assets-loader.js": "d3ddcbc5481c0abcd44aeca9b502a02189925ed0eccb7cee79d037ed2795b5f1"
+  },
+  "publishedBootstrap": {
+    "file": "migration/published-bootstrap.js",
+    "sha256": "3e790db436f75c26d28326f21ec51f2ac8535e51e134730922cad6c36183e3b8"
+  }
+}

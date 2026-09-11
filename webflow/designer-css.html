@@ -1,0 +1,9 @@
+<!-- Persistent Designer preview; the published head owns the active stylesheet. -->
+<link data-bv-designer-css rel="stylesheet" href="https://cdn.jsdelivr.net/gh/brandvm/brandvm@1.1.0/dist/styles.css" />
+<script>
+  if (document.getElementById('bv-site-css')) {
+    document.querySelectorAll('link[data-bv-designer-css]').forEach(function (link) {
+      link.remove();
+    });
+  }
+</script>

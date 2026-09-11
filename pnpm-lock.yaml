@@ -8,11 +8,17 @@ importers:
 
   .:
     devDependencies:
+      '@types/jquery':
+        specifier: ^3.5.32
+        version: 3.5.34
       esbuild:
-        specifier: ^0.28.2
+        specifier: 0.28.2
         version: 0.28.2
+      swiper:
+        specifier: ^11.2.10
+        version: 11.2.10
       typescript:
-        specifier: ^7.0.2
+        specifier: 7.0.2
         version: 7.0.2
 
 packages:
@@ -173,6 +179,12 @@ packages:
     cpu: [x64]
     os: [win32]
 
+  '@types/jquery@3.5.34':
+    resolution: {integrity: sha512-3m3939S3erqmTLJANS/uy0B6V7BorKx7RorcGZVjZ62dF5PAGbKEDZK1CuLtKombJkFA2T1jl8LAIIs7IV6gBQ==}
+
+  '@types/sizzle@2.3.10':
+    resolution: {integrity: sha512-TC0dmN0K8YcWEAEfiPi5gJP14eJe30TTGjkvek3iM/1NdHHsdCA/Td6GvNndMOo/iSnIsZ4HuuhrYPDAmbxzww==}
+
   '@typescript/typescript-aix-ppc64@7.0.2':
     resolution: {integrity: sha512-MTKKkWB7p/0E9xi1d1tHtZ5PiLkGEMIq88pK2CubZjOsLtYTLqhgIgi6zepFa+9GHZ6h05NMCkQxGKiPXMxXtQ==}
     engines: {node: '>=16.20.0'}
@@ -298,6 +310,10 @@ packages:
     engines: {node: '>=18'}
     hasBin: true
 
+  swiper@11.2.10:
+    resolution: {integrity: sha512-RMeVUUjTQH+6N3ckimK93oxz6Sn5la4aDlgPzB+rBrG/smPdCTicXyhxa+woIpopz+jewEloiEE3lKo1h9w2YQ==}
+    engines: {node: '>= 4.7.0'}
+
   typescript@7.0.2:
     resolution: {integrity: sha512-8FYau96o3NKOhbjKi/qNvG/W5jhzxkbdm5sj9AbZ/5T5sWqn3hJgLfGx27sRKZWTvyzCP8dLRBTf5tBTSRVUNA==}
     engines: {node: '>=16.20.0'}
@@ -382,6 +398,12 @@ snapshots:
 
   '@esbuild/win32-x64@0.28.2':
     optional: true
+
+  '@types/jquery@3.5.34':
+    dependencies:
+      '@types/sizzle': 2.3.10
+
+  '@types/sizzle@2.3.10': {}
 
   '@typescript/typescript-aix-ppc64@7.0.2':
     optional: true
@@ -471,6 +493,8 @@ snapshots:
       '@esbuild/win32-arm64': 0.28.2
       '@esbuild/win32-ia32': 0.28.2
       '@esbuild/win32-x64': 0.28.2
+
+  swiper@11.2.10: {}
 
   typescript@7.0.2:
     optionalDependencies:
