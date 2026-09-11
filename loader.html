@@ -4,7 +4,7 @@ Keep existing tracking, metadata and other site/page code.
 
 Designer uses the two real CSS links in Embed 1; it does not run Embed 2.
 Published staging uses GitHub Pages, or localhost with ?bv-dev=1.
-?bv-dev=0 exits local mode. Production uses pinned v1.1.0 assets.
+?bv-dev=0 exits local mode. Production uses pinned v1.1.1 assets.
 For a new release, update both VER values and package.json together.
 -->
 
@@ -23,7 +23,7 @@ For a new release, update both VER values and package.json together.
 <!-- Designer Embed 2: place immediately after Embed 1. Runs on published pages. -->
 <script>
 (function () {
-  var VER = '1.1.0';
+  var VER = '1.1.1';
   var PROD_CSS = 'https://cdn.jsdelivr.net/gh/brandvm/brandvm@' + VER + '/dist/styles.css';
   var STAG = 'https://brandvm.github.io/brandvm/';
   var DEV = 'http://localhost:3000/';
@@ -53,7 +53,7 @@ For a new release, update both VER values and package.json together.
 (function () {
   if (window.__bvFooterStarted) return;
   window.__bvFooterStarted = true;
-  var VER = '1.1.0';
+  var VER = '1.1.1';
   var PROD_JS = 'https://cdn.jsdelivr.net/gh/brandvm/brandvm@' + VER + '/dist/index.js';
   function js(src, fallback) {
     var s = document.createElement('script');

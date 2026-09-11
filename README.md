@@ -33,11 +33,11 @@ Designer applies the two stylesheet links without running the configuration scri
 | Environment | CSS | JavaScript |
 | --- | --- | --- |
 | Designer editing canvas | GitHub Pages, plus localhost when available | Embed scripts do not run |
-| Production | Pinned jsDelivr v1.1.0 | Pinned jsDelivr v1.1.0 |
+| Production | Pinned jsDelivr v1.1.1 | Pinned jsDelivr v1.1.1 |
 | Webflow staging / custom-code preview | GitHub Pages | GitHub Pages |
 | Staging with `?bv-dev=1` | GitHub Pages plus localhost | Localhost |
 
-The bases are `https://cdn.jsdelivr.net/gh/brandvm/brandvm@1.1.0/dist/`, `https://brandvm.github.io/brandvm/`, and `http://localhost:3000/`.
+The bases are `https://cdn.jsdelivr.net/gh/brandvm/brandvm@1.1.1/dist/`, `https://brandvm.github.io/brandvm/`, and `http://localhost:3000/`.
 
 JavaScript request failures fall back from localhost to GitHub Pages to the pinned release. These fallbacks do not switch CSS. A missing configuration Embed warns and loads production JavaScript only; it does not repair missing styles. The footer guards against duplicate execution.
 
@@ -67,7 +67,7 @@ For a new runtime release:
 3. Merge after CI passes, verify hosted staging with `?bv-dev=0`, then create a new immutable release tag on that commit.
 4. Verify the pinned CDN files, apply all four sections from `loader.html` to Webflow staging, test, then publish production.
 
-Never move a published tag or use `@latest`/branch URLs on production. The existing **v1.1.0** assets and tag are unchanged. Use the current `master` copy of `loader.html`; that old tag contains the earlier head-loader instructions. Previous integrations and audit records remain available in Git history.
+Never move a published tag or use `@latest`/branch URLs on production. Release **v1.1.1** includes the separate Designer CSS/config Embeds, footer loader and responsive Insights menu styles. Use its `loader.html` for this release. The existing **v1.1.0** assets and tag remain unchanged; that old tag contains the earlier head-loader instructions. Previous integrations and audit records remain available in Git history.
 
 Before production, check Home, Contact, Our Work, Insights, a service page and a case study on desktop/mobile and cold/cached loads. Confirm the actual Network URLs, then check hero timing, forms, navigation, scrolling and sliders. A working fallback can conceal a failed staging asset. The Embeds' position can affect style overrides and loading; the repo changes alone do not establish a live-site speed improvement.
 
