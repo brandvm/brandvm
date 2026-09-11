@@ -19,7 +19,10 @@ assert.equal(
 );
 
 for (const [file, expected] of Object.entries(baseline.sourceFiles)) {
-  const actual = createHash('sha256').update(await readFile(file)).digest('hex');
+  // The original head loader is archived. Current inline integration now uses
+  // the template's CSS Embed + footer split; runtime assets remain unchanged.
+  const recordedFile = file === 'webflow/assets-loader.js' ? 'migration/original-assets-loader.js' : file;
+  const actual = createHash('sha256').update(await readFile(recordedFile)).digest('hex');
   assert.equal(actual, expected, `${file}: source behavior changed during migration`);
 }
 for (const [file, expected] of Object.entries(baseline.assets)) {

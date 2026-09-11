@@ -8,9 +8,9 @@
 - Destination: https://github.com/brandvm/brandvm
 - Destination template baseline: `961bc777fcf20125fb0f7132ff2ea0a558b2a32b`
 
-`baseline.json` was captured from the actual existing jsDelivr responses and checked against the source repository artifacts. `pnpm verify:migration` compares the destination build and source files with those SHA-256 fingerprints.
+`baseline.json` was captured from the actual existing jsDelivr responses and checked against the source repository artifacts. `pnpm verify:migration` compares the destination build and source files with those SHA-256 fingerprints. The historical readable loader is now archived at `migration/original-assets-loader.js`; its fingerprint is verified there.
 
-`published-bootstrap.js` captures the existing inline loader. For the initial v1.1.0 migration, snippet generation substitutes only delivery URLs in that exact text. This avoids even cosmetic identifier renaming caused by re-minifying the loader with different URL strings. After an intentional version bump, snippets compile the readable `webflow/assets-loader.js` normally. Both the readable loader and captured bootstrap are fingerprinted for the migration release.
+`published-bootstrap.js` captures the existing inline loader. For the initial repository-only v1.1.0 migration, snippet generation substituted only delivery URLs in that exact text. This avoids even cosmetic identifier renaming caused by re-minifying the loader with different URL strings. The subsequent template adaptation generates CSS/config and footer snippets from `webflow/css-config.js` and `webflow/footer-loader.js`. Both original loader snapshots remain fingerprinted as historical evidence; the new inline integration is covered by loader tests.
 
 ## Repository adaptation
 
@@ -18,10 +18,12 @@ Retain the destination's TypeScript/esbuild project structure, editor configurat
 
 Do not merge generic template resets into the site stylesheet, enable its `is-loading` scroll lock, bundle duplicate Webflow dependencies, change the initializers, or relocate styles/scripts during this transfer.
 
-## Future switch review
+## Current integration and future switch review
 
-Use the organization addresses from `webflow/deployment.json` only after the corresponding release assets are available and validated. A domain/repository-address substitution is the intended Webflow diff. Keep the surrounding site and page code intact. No Webflow edits are included in this migration.
+The current integration follows the template’s CSS Embed + footer loader structure. Read `loader.html`, the root README and [template-adaptation.md](template-adaptation.md). The original URL-only head-loader proposal is superseded; do not apply it alongside the new footer.
 
-For rollback of the source switch, restore the former `hamounbv/brandvm@1.1.0` URLs and the former staging base. Do not restore an entire historical head block over newer metadata, tracking or schema.
+Apply all three asset snippets together on Webflow staging. Preserve surrounding site/page code. No Webflow edits are included in this repo work. The v1.1.0 feature bundle, CSS and manifest are unchanged, while inline loader placement and stylesheet order deliberately change.
 
-Byte-for-byte asset parity establishes that the CSS/JS content and feature behavior were not changed. Network cache state and connection timing can differ at a new URL, so visual and cold-load checks are still required before switching Webflow.
+For rollback, restore the former head asset link/bootstrap and Designer link/cleanup, and remove the new footer loader together. Retain the former source addresses or another verified pinned release. Do not restore an entire historical head block over newer tracking, metadata or schema.
+
+Asset parity establishes that feature code and CSS content were preserved; it does not establish identical loading or cascade behavior. Real staging layout, interaction and cold-load checks are required before production.
