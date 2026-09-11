@@ -1,13 +1,7 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
 const vm = require('node:vm');
-const { readFileSync } = require('node:fs');
-const { resolve } = require('node:path');
-const read = file => readFileSync(resolve(__dirname, '..', file), 'utf8');
-const config = {
-  production: { css: 'https://cdn.example/v1/styles.css', js: 'https://cdn.example/v1/index.js' },
-  stagingBase: 'https://preview.example/', devBase: 'http://localhost:3000/',
-};
+const { cssScript, footerScript, cssConfig: config } = require('./loader-source.cjs');
 const flush = () => new Promise(resolve => setImmediate(resolve));
 
 function setup({ host = 'www.brandvm.com', search = '', stored = null, denyStorage = false, missingEmbed = false } = {}) {
@@ -35,11 +29,10 @@ function setup({ host = 'www.brandvm.com', search = '', stored = null, denyStora
     clearTimeout(id) { timers.delete(id); },
     console: { error: message => errors.push(message), warn: message => warnings.push(message) },
   });
-  vm.runInContext(read('webflow/css-config.js') + '\n' + read('webflow/footer-loader.js'), context);
-  if (!missingEmbed) context.prepareBrandVisionStyles(config);
+  if (!missingEmbed) vm.runInContext(cssScript, context);
   return { css, scripts, links, styleRequests, timers, errors, warnings, context,
-    footer: () => context.loadBrandVisionScript(config),
-    prepare: () => context.prepareBrandVisionStyles(config),
+    footer: () => vm.runInContext(footerScript, context),
+    prepare: () => vm.runInContext(cssScript, context),
   };
 }
 
@@ -70,7 +63,7 @@ test('CSS finishing before the footer does not start JavaScript early', async ()
   assert.equal(h.scripts.length, 0);
   h.footer();
   await flush();
-  assert.match(h.scripts[0].src, /^https:\/\/preview.example\/index.js\?v=/);
+  assert.ok(h.scripts[0].src.startsWith(config.stagingBase + 'index.js?v='));
 });
 
 test('footer waits for pending staging CSS and uses the same cache token', async () => {
@@ -89,10 +82,10 @@ test('local CSS failure falls back to staging even when storage is blocked', asy
   h.footer();
   assert.equal(h.css.href, 'http://localhost:3000/styles.css');
   h.css.onerror();
-  assert.match(h.css.href, /^https:\/\/preview.example/);
+  assert.ok(h.css.href.startsWith(config.stagingBase));
   h.css.onload();
   await flush();
-  assert.match(h.scripts[0].src, /^https:\/\/preview.example/);
+  assert.ok(h.scripts[0].src.startsWith(config.stagingBase));
 });
 
 test('local and staging JS failures switch CSS as well, then reach pinned production', async () => {
@@ -103,10 +96,10 @@ test('local and staging JS failures switch CSS as well, then reach pinned produc
   assert.equal(h.scripts[0].src, 'http://localhost:3000/index.js');
   h.scripts[0].onerror();
   assert.equal(h.scripts[0].removed, true);
-  assert.match(h.css.href, /^https:\/\/preview.example/);
+  assert.ok(h.css.href.startsWith(config.stagingBase));
   h.css.onload();
   await flush();
-  assert.match(h.scripts[1].src, /^https:\/\/preview.example/);
+  assert.ok(h.scripts[1].src.startsWith(config.stagingBase));
   h.scripts[1].onerror();
   assert.equal(h.css.href, config.production.css);
   h.css.onload();
@@ -121,11 +114,11 @@ test('stalled local CSS advances to staging and ignores the old load callback', 
   const lateLoad = h.css.onload;
   [...h.timers.values()][0]();
   lateLoad();
-  assert.match(h.css.href, /^https:\/\/preview.example/);
+  assert.ok(h.css.href.startsWith(config.stagingBase));
   h.css.onload();
   await flush();
   assert.equal(h.scripts.length, 1);
-  assert.match(h.scripts[0].src, /^https:\/\/preview.example/);
+  assert.ok(h.scripts[0].src.startsWith(config.stagingBase));
 });
 
 test('dev-off URL overrides a persisted local flag', async () => {
@@ -133,7 +126,7 @@ test('dev-off URL overrides a persisted local flag', async () => {
   h.footer();
   h.css.onload();
   await flush();
-  assert.match(h.scripts[0].src, /^https:\/\/preview.example/);
+  assert.ok(h.scripts[0].src.startsWith(config.stagingBase));
 });
 
 test('custom-code preview frames support explicit local mode', async () => {
