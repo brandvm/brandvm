@@ -29,5 +29,6 @@ declare global {
       parseDots(path: string): unknown[];
     };
     __brandvmBooted?: boolean;
+    __bvLazyVideosStarted?: boolean;
   }
 }

@@ -7,7 +7,7 @@ const { readFileSync } = require('node:fs');
 const code = buildSync({ entryPoints: [path.resolve(__dirname, '../src/index.ts')], bundle: true, write: false, format: 'iife', define: { __BV_VERSION__: '"test-release"' } }).outputFiles[0].text;
 
 function setup(ready) {
-  const queue = [], events = [], errors = [], root = { dataset: {} };
+  const queue = [], events = [], errors = [], listeners = new Map(), root = { dataset: {} };
   const context = vm.createContext({
     window: {
       Webflow: ready ? { push(fn) { fn(); } } : queue,
@@ -18,18 +18,21 @@ function setup(ready) {
       readyState: ready ? 'complete' : 'loading',
       documentElement: root,
       querySelectorAll: () => [],
-      addEventListener: (event) => events.push(event),
+      addEventListener: (event, callback) => { events.push(event); listeners.set(event, callback); },
     },
     console: { ...console, error: (...args) => errors.push(args) },
   });
-  return { context, queue, events, errors, root };
+  return { context, queue, events, errors, listeners, root };
 }
 
 test('bundle waits for Webflow readiness and boots once when the queue is drained', () => {
   const h = setup(false);
   vm.runInContext(code, h.context);
   assert.equal(h.queue.length, 1);
-  assert.deepEqual(h.events, []);
+  assert.deepEqual(h.events, ['DOMContentLoaded']);
+  assert.equal(h.context.window.__bvLazyVideosStarted, true);
+  h.listeners.get('DOMContentLoaded')();
+  // Lazy videos can start before Webflow without starting the other features.
   assert.equal(h.root.dataset.bvVersion, undefined);
   h.context.document.readyState = 'complete';
   h.queue[0]();

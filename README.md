@@ -71,6 +71,19 @@ Run `pnpm dev` on the same computer and reload Designer to pick up the local sty
 
 The local sheet layers over the staging sheet. Removing a rule locally can leave the staging rule visible, so inspect stylesheet sources when checking deletions. Browsers can request the static staging and localhost links on published pages before the configuration changes/removes them; this pattern does not guarantee zero extra requests or that cleanup always precedes first paint.
 
+### Lazy videos
+
+The bundle includes the lazy-video footer logic; no extra footer script is needed.
+Opt in with `data-bv-lazy-video="true"` on a video and store its URL in `data-src`
+on the video or its child `<source>` elements. Keep those URLs out of `src` until
+loading is needed; `preload="none"` is also appropriate for the initial markup.
+The loader starts on DOM readiness, independently of Webflow, and loads each
+video once when it comes within 300px above or below the viewport. It enables
+muted inline playback and shows controls if autoplay is rejected. Browsers
+without IntersectionObserver load the opted-in videos immediately. It shares
+`window.__bvLazyVideosStarted` with the supplied standalone snippet to avoid
+duplicate initialization. Unmarked videos are left alone.
+
 ## Validation and production releases
 
 Install the browser used by the local checks once after installing dependencies:
