@@ -5,18 +5,28 @@ import { initCounter } from './modules/counter';
 import { initDotMap } from './modules/dot-map';
 import { initReadMore } from './modules/read-more';
 import { initDropdownClose } from './modules/dropdown-close';
+import { initEnvironmentSwitcher } from './modules/environment-switcher';
+
+function run(name: string, initialize: () => void) {
+  try {
+    initialize();
+  } catch (error) {
+    console.error(`[bv] ${name} failed`, error);
+  }
+}
 
 function boot() {
   if (window.__brandvmBooted) return;
   window.__brandvmBooted = true;
   // Webflow supplies jQuery / GSAP. Do not bundle another copy.
-  initLenis();
-  initNewsletter();
-  initFlareBorder();
-  initCounter();
-  initDotMap();
-  initReadMore();
-  initDropdownClose();
+  run('Lenis', initLenis);
+  run('Newsletter', initNewsletter);
+  run('FlareBorder', initFlareBorder);
+  run('Counter', initCounter);
+  run('DotMap', initDotMap);
+  run('ReadMore', initReadMore);
+  run('DropdownClose', initDropdownClose);
+  run('EnvironmentSwitcher', initEnvironmentSwitcher);
   document.documentElement.dataset.bvVersion = __BV_VERSION__;
 }
 

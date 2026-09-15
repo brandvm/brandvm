@@ -7,3 +7,7 @@ node_modules/
 
 # Production JS, CSS and version.json stay tracked so every release tag works.
 dist/*.map
+
+# Local browser test reports; never part of the site assets.
+test-results/
+playwright-report/

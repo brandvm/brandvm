@@ -18,6 +18,7 @@ jobs:
           node-version: 22
       - uses: pnpm/action-setup@v4
       - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm validate
       - name: Require delivery artifacts in git
         run: git ls-files --error-unmatch dist/index.js dist/styles.css dist/version.json loader.html

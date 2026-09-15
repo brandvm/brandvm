@@ -8,6 +8,14 @@ interface LenisInstance {
 declare global {
   const __BV_VERSION__: string;
   interface Window {
+    BV?: {
+      staging: boolean;
+      dev: boolean;
+      devBase: string;
+      stag: string;
+      // Actual JavaScript bundle base, captured by the staging switcher.
+      source?: string;
+    };
     Webflow?: { push(callback: () => void): unknown; env?(mode: string): boolean };
     jQuery?: JQueryStatic;
     Lenis?: new (options: Record<string, unknown>) => LenisInstance;

@@ -1,4 +1,22 @@
-/* Custom styles. Preserve section order: later equal-specificity rules win. */
+/* Custom styles — source of truth for dist/styles.css.
+
+   Contents (preserve the existing rule and section order):
+     01. TOKENS & COLOR SYSTEM
+     02. BASE, TYPOGRAPHY & UTILITIES
+     03. INTERACTIONS & MOTION
+     04. COMPONENTS, SECTIONS & FORMS
+     05. CARDS, LISTS & BENTO
+
+   Maintenance:
+   - Webflow owns the page markup and Designer classes; this sheet supplies
+     the site's custom tokens, overrides, utilities and feature styles.
+   - Later rules win when specificity and importance are equal. Add rules
+     beside their related component; do not reorder rules for formatting.
+   - Keep overrides unlayered: Webflow's unlayered normal declarations take
+     precedence over normal declarations placed inside a CSS @layer.
+   - Designer loads staging CSS before localhost CSS. A deleted local rule
+     can leave staging's copy active; verify removals against staging too.
+*/
 
 /* ============================================================
    01. TOKENS & COLOR SYSTEM
@@ -540,6 +558,13 @@ a {
   .mega-menu-insights-item:nth-child(3) {
     display: none;
   }
+}
+
+/* Keep navigation CTAs and Home hero content visible before IX3 initializes.
+   Once Webflow adds w-mod-ix3, its interaction styles take over. */
+html.w-mod-js:not(.w-mod-ix3) .g-nav-w .grouped-cta-w,
+html.w-mod-js:not(.w-mod-ix3) .s-home-hero :is(.grouped-cta-w, .text-b) {
+  visibility: visible !important;
 }
 
 /* ---------- Hero panels panorama (Home hero, from G | Embed Code) ---------- */
