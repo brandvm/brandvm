@@ -6,7 +6,7 @@ import { initDotMap } from './modules/dot-map';
 import { initReadMore } from './modules/read-more';
 import { initDropdownClose } from './modules/dropdown-close';
 import { initEnvironmentSwitcher } from './modules/environment-switcher';
-import { initLazyVideos } from './modules/lazy-videos';
+import './modules/lazy-videos';
 
 function run(name: string, initialize: () => void) {
   try {
@@ -15,9 +15,6 @@ function run(name: string, initialize: () => void) {
     console.error(`[bv] ${name} failed`, error);
   }
 }
-
-// Lazy media needs only the DOM, matching the supplied standalone snippet.
-run('LazyVideos', initLazyVideos);
 
 function boot() {
   if (window.__brandvmBooted) return;

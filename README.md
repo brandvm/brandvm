@@ -23,8 +23,8 @@ The label describes the JavaScript bundle that actually loaded. A fallback note
 identifies staging or the pinned release, and either mode can be selected to
 retry. CSS still follows the existing independent selection policy. For example,
 local CSS can remain active after local JavaScript falls back to staging.
-The fallback bundle must also contain the control to show it; the currently
-pinned v1.1.1 release predates this feature.
+The fallback bundle must also contain the control to show it; pinned releases
+from v1.1.2 include it.
 The bundle captures its own script URL, so the control works with the existing
 footer without a Webflow snippet update. Local styling still requires the
 localhost stylesheet link in the CSS Embed to be enabled.
@@ -49,11 +49,11 @@ Designer applies the two stylesheet links without running the configuration scri
 | Environment | CSS | JavaScript |
 | --- | --- | --- |
 | Designer editing canvas | GitHub Pages, plus localhost when available | Embed scripts do not run |
-| Production | Pinned jsDelivr v1.1.1 | Pinned jsDelivr v1.1.1 |
+| Production | Pinned jsDelivr v1.1.2 | Pinned jsDelivr v1.1.2 |
 | Webflow staging / custom-code preview | GitHub Pages | GitHub Pages |
 | Staging with `?bv-dev=1` | GitHub Pages plus localhost | Localhost |
 
-The bases are `https://cdn.jsdelivr.net/gh/brandvm/brandvm@1.1.1/dist/`, `https://brandvm.github.io/brandvm/`, and `http://localhost:3000/`.
+The bases are `https://cdn.jsdelivr.net/gh/brandvm/brandvm@1.1.2/dist/`, `https://brandvm.github.io/brandvm/`, and `http://localhost:3000/`.
 
 JavaScript request failures fall back from localhost to GitHub Pages to the pinned release. These fallbacks do not switch CSS. A missing configuration Embed warns and loads production JavaScript only; it does not repair missing styles. The footer guards against duplicate execution.
 
@@ -73,16 +73,25 @@ The local sheet layers over the staging sheet. Removing a rule locally can leave
 
 ### Lazy videos
 
-The bundle includes the lazy-video footer logic; no extra footer script is needed.
-Opt in with `data-bv-lazy-video="true"` on a video and store its URL in `data-src`
-on the video or its child `<source>` elements. Keep those URLs out of `src` until
-loading is needed; `preload="none"` is also appropriate for the initial markup.
-The loader starts on DOM readiness, independently of Webflow, and loads each
-video once when it comes within 300px above or below the viewport. It enables
-muted inline playback and shows controls if autoplay is rejected. Browsers
-without IntersectionObserver load the opted-in videos immediately. It shares
-`window.__bvLazyVideosStarted` with the supplied standalone snippet to avoid
-duplicate initialization. Unmarked videos are left alone.
+The bundle includes the self-starting v2 video controller; no separate footer
+initialization is needed. Remove `fs-autovideo` from the existing Finsweet
+Attributes script tag in the same Webflow publication, keeping its other
+attributes such as `fs-list` and `fs-socialshare`.
+
+Opt in to deferred source loading with `data-bv-lazy-video="true"` and store URLs
+in `data-src` on the video or its child `<source>` elements. Keep these URLs out
+of `src` initially; use `preload="none"` in the markup. On DOM readiness,
+independently of Webflow, the controller preloads opted-in videos once within
+300px of the viewport, enabling muted inline playback and `preload="auto"`.
+
+All videos have native autoplay disabled and are played only while visible.
+They pause outside the viewport or while the document is hidden, then resume
+when visible again. Playback cancellation (`AbortError`) leaves controls alone;
+other playback errors enable manual controls. Unmarked videos retain their
+source settings while participating in visibility-based playback. Browsers
+without IntersectionObserver load opted-in sources and attempt playback on all
+videos immediately; the supplied fallback does not track visibility changes.
+The shared `window.__bvLazyVideosStarted` guard prevents duplicate controllers.
 
 ## Validation and production releases
 
@@ -144,7 +153,7 @@ For a new runtime release:
 3. Merge after CI passes, verify hosted staging with `?bv-dev=0`, then create a new immutable release tag on that commit.
 4. Verify the pinned CDN files, apply all four sections from `loader.html` to Webflow staging, test, then publish production.
 
-Never move a published tag or use `@latest`/branch URLs on production. Release **v1.1.1** includes the separate Designer CSS/config Embeds, footer loader and responsive Insights menu styles. Use its `loader.html` for this release. The existing **v1.1.0** assets and tag remain unchanged; that old tag contains the earlier head-loader instructions. Previous integrations and audit records remain available in Git history.
+Never move a published tag or use `@latest`/branch URLs on production. Release **v1.1.2** includes the v2 video controller, staging mode control, startup error isolation and navigation/Home hero visibility fallback. Release **v1.1.1** includes the separate Designer CSS/config Embeds, footer loader and responsive Insights menu styles. Use the current `loader.html` for v1.1.2. The existing **v1.1.0** assets and tag remain unchanged; that old tag contains the earlier head-loader instructions. Previous integrations and audit records remain available in Git history.
 
 Before production, check Home, Contact, Our Work, Insights, a service page and a case study on desktop/mobile and cold/cached loads. Confirm the actual Network URLs, then check hero timing, forms, navigation, scrolling and sliders. A working fallback can conceal a failed staging asset. The Embeds' position can affect style overrides and loading; the repo changes alone do not establish a live-site speed improvement.
 
@@ -179,4 +188,4 @@ specified CTA groups and hero text while `html` has `w-mod-js` without
 `w-mod-ix3`. It stops matching once IX3 initializes. It does not override
 `display`, opacity or transforms, so this is a visibility fallback, not a
 guarantee that an element will render when other styles hide it. It ships in
-`styles.css`; production receives it only through a future pinned release.
+`styles.css` and is included in pinned release v1.1.2.
